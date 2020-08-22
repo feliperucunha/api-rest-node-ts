@@ -10,6 +10,21 @@ interface ScheduleItem {
 }
 
 export default class ClassesController {
+    async index(req: Request, res: Response) {
+        const filters = req.query;
+
+        if(!filters.subject || !filters.week_day || !filters.time) {
+            return res.status(400).json({
+                error: 'Missing filters to search classes'
+            })
+        }
+
+        const timeInMinutes = converHourToMinutes(filters.time as string);
+
+        return res.send();
+    }
+
+
     async create(req: Request, res: Response) {
         const {
             name,
