@@ -16,7 +16,7 @@ export async function up(knex: Knex) {
 
         //Verifica a entrada dos usuários no sistema
         table.timestamp('created_at')
-            .defaultTo('now()')
+            .defaultTo(knex.raw('CURRENT_TIMESTAMP'))
             .notNullable();        
     })
 }

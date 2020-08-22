@@ -12,16 +12,34 @@ interface ScheduleItem {
 export default class ClassesController {
     async index(req: Request, res: Response) {
         const filters = req.query;
+        const subject = filters.subject as string;
+        const week_day = filters.week_day as string;
+        const time = filters.time as string;
 
+        //verifica se o filtro está vazio
         if(!filters.subject || !filters.week_day || !filters.time) {
             return res.status(400).json({
                 error: 'Missing filters to search classes'
             })
         }
 
-        const timeInMinutes = converHourToMinutes(filters.time as string);
+        const timeInMinutes = converHourToMinutes(time);
 
-        return res.send();
+        const classes = await db('classes')
+            //verifica se tem horário disponível
+            .whereExists(function() {
+                this.select('class_schedule.*')
+                    .from('class_schedule')
+                    //verifica se os horários cadastrados estão de acordo com os filtrados
+                    .whereRaw('`class_schedule`.`class_id` = `classes`.`id`')
+                    .whereRaw('`class_schedule`.`week_day` = ??', [Number(week_day)])
+                    .whereRaw('`class_schedule`.`from` <= ??', [timeInMinutes])
+            })
+            .where('classes.subject', '=', subject)
+            .join('users', 'classes.user_id', '=', 'users.id')
+            .select(['classes.*', 'users.*']);
+
+        return res.json(classes);
     }
 
 
